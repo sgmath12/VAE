@@ -4,8 +4,9 @@ import torch.nn as nn
 
 class unFlatten(nn.Module):
 
-    def forward(self,x,data = 'cifar'):
-        return x.view(x.shape[0],12,8,8) if data =='cifar' else x.view(x.shape[0],6,8,8)
+    def forward(self,x):
+        return x.view(x.shape[0],12,8,8) 
+        # return x.view(x.shape[0],3,32,32)
 
 class Flatten(nn.Module):
     def forward(self,x):
@@ -20,21 +21,23 @@ class vae_CIFAR(nn.Module):
     def __init__(self):
         super(vae_CIFAR,self).__init__()
         self.latentDimension = 5
+        self.activation = nn.ELU()
         self.encoder = nn.Sequential(
             nn.Conv2d(3,6,3,2,1), # (6,16,16)
-            nn.ReLU(),
+            self.activation,
             nn.Conv2d(6,12,3,2,1), # (12,8,8)
-            nn.ReLU(),
+            self.activation,
             Flatten(), # 3*8*8 = 192
-            nn.Linear(768,self.latentDimension*2) # mu, log_var
+            nn.Linear(768,self.latentDimension*2), # mu, log_var
+            self.activation
         )
 
         self.decoder = nn.Sequential(
             nn.Linear(self.latentDimension,768),
-            nn.ReLU(),
+            self.activation,
             unFlatten(),
             nn.ConvTranspose2d(12,6,3,2,1,1), # (6,16,16) 
-            nn.ReLU(),
+            self.activation,
             nn.ConvTranspose2d(6,3,3,2,1,1), # (3,32,32)
             nn.Sigmoid()
         )
@@ -54,24 +57,25 @@ class vae_MNIST(nn.Module):
     - Assume that variational posterior is gaussian with independent of each dimension (covariance matrix is diagonal)
     '''
     def __init__(self):
-        super(VAE,self).__init__()
+        super(vae_MNIST,self).__init__()
         self.latentDimension = 5
         self.encoder = nn.Sequential(
-            nn.Conv2d(1,3,3,2,1), # (6,16,16)
+            Flatten(), # (3*32*32)
+            nn.Linear(3*32*32,768),
             nn.ReLU(),
-            nn.Conv2d(3,6,3,2,1), # (12,8,8)
+            nn.Linear(768,128),
             nn.ReLU(),
-            Flatten(), # 3*8*8 = 192
-            nn.Linear(384,self.latentDimension*2) # mu, log_var
+            nn.Linear(128,2*self.latentDimension),
+            nn.ReLU()
         )
 
         self.decoder = nn.Sequential(
-            nn.Linear(self.latentDimension,768),
+            nn.Linear(self.latentDimension,128),
             nn.ReLU(),
+            nn.Linear(128,768),
+            nn.ReLU(),
+            nn.Linear(768,3*32*32),
             unFlatten(),
-            nn.ConvTranspose2d(12,6,3,2,1,1), # (6,16,16) 
-            nn.ReLU(),
-            nn.ConvTranspose2d(6,3,3,2,1,1), # (3,32,32)
             nn.Sigmoid()
         )
 

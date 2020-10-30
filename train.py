@@ -16,9 +16,9 @@ path = os.path.expanduser( '~/data/MNIST')
 trainset = torchvision.datasets.CIFAR10(root = path, train=True,
                                         download=False, transform=transform)
 
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=1,shuffle=True)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=4,shuffle=True)
 model = vae_CIFAR()
-optimizer = optim.SGD(model.parameters(), lr = 0.0001)
+optimizer = optim.Adam(model.parameters(), lr = 0.0001)
 
 for epoch in range(100):
     running_loss = 0.0
