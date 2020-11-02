@@ -5,8 +5,8 @@ import torch.nn as nn
 class unFlatten(nn.Module):
 
     def forward(self,x):
-        return x.view(x.shape[0],12,8,8) 
-        # return x.view(x.shape[0],3,32,32)
+        # return x.view(x.shape[0],12,8,8) 
+        return x.view(x.shape[0],1,28,28)
 
 class Flatten(nn.Module):
     def forward(self,x):
@@ -46,24 +46,24 @@ class vae_CIFAR(nn.Module):
         # x = image with (C,H,W). 
         out = self.encoder(x) # (5)
         mu,log_var = out[:,:self.latentDimension], out[:,self.latentDimension:]
-        e = torch.randn_like(mu) # 
-        z = mu + e * torch.sqrt(torch.exp(log_var))
+        eps = torch.randn_like(mu) # 
+        z = mu + eps * torch.exp(0.5*log_var)
         out = self.decoder(z)
         return mu,log_var,out
         
 class vae_MNIST(nn.Module):
     '''
-    - Dimension of latent vector Z is 5 
+    - Dimension of latent vector Z is 2
     - Assume that variational posterior is gaussian with independent of each dimension (covariance matrix is diagonal)
     '''
     def __init__(self):
         super(vae_MNIST,self).__init__()
-        self.latentDimension = 5
+        self.latentDimension = 2
         self.encoder = nn.Sequential(
-            Flatten(), # (3*32*32)
-            nn.Linear(3*32*32,768),
+            Flatten(), # (1*32*32)
+            nn.Linear(1*28*28,512),
             nn.ReLU(),
-            nn.Linear(768,128),
+            nn.Linear(512,128),
             nn.ReLU(),
             nn.Linear(128,2*self.latentDimension),
             nn.ReLU()
@@ -72,9 +72,9 @@ class vae_MNIST(nn.Module):
         self.decoder = nn.Sequential(
             nn.Linear(self.latentDimension,128),
             nn.ReLU(),
-            nn.Linear(128,768),
+            nn.Linear(128,512),
             nn.ReLU(),
-            nn.Linear(768,3*32*32),
+            nn.Linear(512,1*28*28),
             unFlatten(),
             nn.Sigmoid()
         )
