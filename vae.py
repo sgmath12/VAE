@@ -65,8 +65,7 @@ class vae_MNIST(nn.Module):
             nn.ReLU(),
             nn.Linear(512,128),
             nn.ReLU(),
-            nn.Linear(128,2*self.latentDimension),
-            nn.ReLU()
+            nn.Linear(128,2*self.latentDimension)
         )
 
         self.decoder = nn.Sequential(
